@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block titlecontent %}
+    {% if request.resolver_match.view_name  == "posts:post_create" %}
+        <title>Новый пост</title>
+    {% else %}
+        <title>Редактирование поста</title>
+    {% endif %}
+{% endblock %}
+{% block content %}
+    {% load user_filters %}
+    {% with request.resolver_match.view_name as view_name %}
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-md-8 p-5">
+                    <div class="card">
+                        <div class="card-header">
+                            {% if view_name  == "posts:post_create" %}
+                                Новый пост
+                            {% else %}
+                                Редактирование поста
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            {% include "includes/errors.html" %}
+                            <form method="post"
+                                  {% if action_url %} action="{% url action_url %}" {% endif %}>
+                                {% csrf_token %}
+                                {% include "includes/form.html" %}
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        {% if view_name  == "posts:post_create" %}
+                                            Добавить
+                                        {% else %}
+                                            Сохранить
+                                        {% endif %}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endwith %}
+{% endblock %}

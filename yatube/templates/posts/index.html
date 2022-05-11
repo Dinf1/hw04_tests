@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block titlecontent %}<title>Последние обновления на сайте</title>{% endblock %}
+{% block content %}
+    {% include "includes/post.html" %}
+    {% include "posts/includes/paginator.html" %}
+{% endblock %}
