@@ -1,21 +1,16 @@
 from http import HTTPStatus
 
-from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
+from django.urls import reverse
 
-from posts.models import Group, Post
-
-User = get_user_model()
+from posts.models import Group, Post, User
 
 
 class PostsURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.guest_client = Client()
         cls.user = User.objects.create_user(username='AutoTestUser')
-        cls.authorized_client = Client()
-        cls.authorized_client.force_login(cls.user)
         cls.group = Group.objects.create(
             title='Test group',
             slug='test_slug',
@@ -26,21 +21,15 @@ class PostsURLTests(TestCase):
             text='Тестовый текст',
             group=cls.group,
         )
-        cls.user2 = User.objects.create_user(username='AutoTestUser2')
-        cls.post2 = Post.objects.create(
-            author=cls.user2,
-            text='Тестовый текст #2',
-            group=cls.group,
-        )
 
-    def test_homepage(self):
-        response = self.guest_client.get('/')
-        self.assertEqual(response.status_code, 200)
+    def setUp(self):
+        self.guest_client = Client()
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
 
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
-        task = PostsURLTests.post
-        post_id = task.id
+        post_id = self.post.id
         templates_url_names = {
             '/': 'posts/index.html',
             '/create/': 'posts/create_post.html',
@@ -58,38 +47,50 @@ class PostsURLTests(TestCase):
         """Страница по адресу /create/ перенаправит анонимного
         пользователя на страницу логина.
         """
-        response = self.guest_client.get('/create/', follow=True)
-        self.assertRedirects(
-            response, '/auth/login/?next=/create/'
+        response = self.guest_client.get(
+            reverse('posts:post_create'),
+            follow=True
         )
+        self.assertRedirects(response, reverse(
+            'users:login') + '?next=' + reverse('posts:post_create'))
 
     def test_post_edit_url_redirect_not_author_on_post_detail(self):
         """Страница по адресу /post/<post_id>/edit/ перенаправит всех, кроме
         автора поста на страницу поста.
         """
-        post_id = PostsURLTests.post2.id
+        user2 = User.objects.create_user(username='AutoTestUser2')
+        post2 = Post.objects.create(
+            author=user2,
+            text='Тестовый текст #2',
+            group=self.group,
+        )
+        post_id = post2.id
         response = self.authorized_client.get(
-            f'/posts/{post_id}/edit/', follow=True
+            reverse('posts:post_edit', args=(post_id,)), follow=True
         )
         self.assertRedirects(
-            response, (f'/posts/{post_id}/'))
+            response, reverse('posts:post_detail', args=(post_id,)))
 
         response = self.guest_client.get(
-            f'/posts/{post_id}/edit/', follow=True
+            reverse('posts:post_edit', args=(post_id,)), follow=True
         )
+
         self.assertRedirects(
-            response, (f'/auth/login/?next=/posts/{post_id}/edit/'))
+            response, (
+                reverse('users:login') + '?next='
+                + (reverse('posts:post_edit', args=(post_id,)))
+            ))
 
     def test_urls_exists_at_desired_locations(self):
         """Проверка доступности адресов."""
-        post_id = PostsURLTests.post.id
+        post_id = self.post.id
         templates_url_names = [
-            '/',
-            '/create/',
-            '/group/test_slug/',
-            f'/posts/{post_id}/',
-            '/profile/AutoTestUser/',
-            f'/posts/{post_id}/edit/',
+            reverse('posts:index'),
+            reverse('posts:post_create'),
+            (reverse('posts:group_list', args=(self.group.slug,))),
+            (reverse('posts:post_detail', args=(post_id,))),
+            (reverse('posts:profile', args=(self.user.username,))),
+            (reverse('posts:post_edit', args=(post_id,))),
         ]
         for address in templates_url_names:
             with self.subTest(address=address):
