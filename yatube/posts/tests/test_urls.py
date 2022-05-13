@@ -87,10 +87,10 @@ class PostsURLTests(TestCase):
         templates_url_names = [
             reverse('posts:index'),
             reverse('posts:post_create'),
-            (reverse('posts:group_list', args=(self.group.slug,))),
-            (reverse('posts:post_detail', args=(post_id,))),
-            (reverse('posts:profile', args=(self.user.username,))),
-            (reverse('posts:post_edit', args=(post_id,))),
+            reverse('posts:group_list', args=(self.group.slug,)),
+            reverse('posts:post_detail', args=(post_id,)),
+            reverse('posts:profile', args=(self.user.username,)),
+            reverse('posts:post_edit', args=(post_id,)),
         ]
         for address in templates_url_names:
             with self.subTest(address=address):
