@@ -4,6 +4,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from posts.models import Group, Post, User
+from posts.tests.test_views import POST_TEXT
 
 
 class PostsURLTests(TestCase):
@@ -18,7 +19,7 @@ class PostsURLTests(TestCase):
         )
         cls.post = Post.objects.create(
             author=cls.user,
-            text='Тестовый текст',
+            text=POST_TEXT.format(1),
             group=cls.group,
         )
 
@@ -61,7 +62,7 @@ class PostsURLTests(TestCase):
         user2 = User.objects.create_user(username='AutoTestUser2')
         post2 = Post.objects.create(
             author=user2,
-            text='Тестовый текст #2',
+            text=POST_TEXT.format(2),
             group=self.group,
         )
         post_id = post2.id

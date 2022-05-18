@@ -2,6 +2,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from posts.models import Group, Post, User
+from posts.tests.test_views import POST_TEXT
 
 
 class PostsViewsTests(TestCase):
@@ -24,14 +25,14 @@ class PostsViewsTests(TestCase):
         новая запись в базе данных"""
         count = Post.objects.count()
         response = self.authorized_client.post(reverse('posts:post_create'), {
-            'text': 'Тестовый текст #1', 'group': 1}, follow=True)
+            'text': POST_TEXT.format(1), 'group': 1}, follow=True)
         self.assertRedirects(
             response, (reverse('posts:profile', args=(self.user.username,)))
         )
         self.assertTrue(
             Post.objects.filter(
                 group=self.group,
-                text='Тестовый текст #1',
+                text=POST_TEXT.format(1),
                 author=self.user
             ).exists()
         )
@@ -42,15 +43,16 @@ class PostsViewsTests(TestCase):
         происходит изменение поста с post_id в базе данных."""
         post = Post.objects.create(
             author=self.user,
-            text='Тестовый текст #2',
+            text=POST_TEXT.format(2),
             group=self.group,
         )
-        self.authorized_client.post(reverse(
-            'posts:post_edit', args=(post.id,)
-        ), {
-            'text': 'Тестовый текст #3',
-            'group': 1
-        }
+        self.authorized_client.post(
+            reverse(
+                'posts:post_edit', args=(post.id,)
+            ), {
+                'text': POST_TEXT.format(3),
+                'group': 1
+            }
         )
         post2 = Post.objects.get(pk=post.id)
         self.assertNotEqual(post2.text, post.text)
